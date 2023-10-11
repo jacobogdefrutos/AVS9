@@ -8,7 +8,7 @@ from main import(
     ACTIVATION, ENCODER_NAME, ENCODER_WEIGHTS, NUM_WORKERS, IMAGE_HEIGHT,
     IMAGE_WIDTH,  PIN_MEMORY )
 
-BEST_M_CHECKPOINT_DIR = r"1-Unet/Code/saved_models/best_model_unet_aug_N.pth.tar"
+BEST_M_CHECKPOINT_DIR = r"1-Unet/Code/saved_models/best_model_unet_aug_N_6.pth.tar"
 TEST_IMG_DIR = r"Data/test/Imag" 
 TEST_MASK_DIR = r"Data/test/Labels"
 BACTH_SIZE=1
