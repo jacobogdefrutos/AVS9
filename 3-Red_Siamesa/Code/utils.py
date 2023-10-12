@@ -1,5 +1,6 @@
 from dataset import SiameseDataset
 import torch
+import numpy as np
 from torch.utils.data import DataLoader
 import tqdm
 
@@ -52,14 +53,47 @@ class ContrastiveLoss(torch.nn.Module):
         loss = y * dist_sq + (1 - y) * torch.pow(dist, 2)
         loss = torch.sum(loss) / 2.0 / x0.size()[0]
         return loss
-def train_fn(loader, model, optimizer, loss_fn,scaler,device):
+def train_fn(loader, model, optimizer, loss_fn,device):
     model.to(device)
     losses = []
+    iteration_numer=0
+    counter= []
     model.train()
-    for i,sample in tqdm(enumerate(loader)):
+    for i,sample in enumerate(loader,0):
         img_OI,img_OD, label =sample
+        img_OI, img_OD, label = img_OI.to(device=device), img_OD.to(device=device), label.to(device=device)
         optimizer.zero_grad()
         #forward
         with torch.set_grad_enabled(True):
             prediction1,prediction2 = model(img_OI,img_OD)
             loss = loss_fn(prediction1,prediction2, label)
+            loss.backward()
+            optimizer.step()
+            
+        if i % 10 == 0 :
+            iteration_number += 10
+            counter.append(iteration_number)
+            losses.append(loss.item())
+    
+    print("Training Loss: ", loss)
+    return loss,losses,counter
+def val_loss(loader,model,optimizer,loss_fn,device):
+    print("-----Calculating Validation loss-----")
+    model.eval()
+    losses=[]
+    iteration_numer=0
+    counter= []
+    with torch.no_grad():
+        for i,sample in enumerate(loader,0):
+            img_OI,img_OD, label =sample
+            img_OI, img_OD, label = img_OI.to(device=device), img_OD.to(device=device), label.to(device=device)
+            prediction1,prediction2 = model(img_OI,img_OD)
+            loss = loss_fn(prediction1,prediction2, label)
+            losses.append(loss.item())
+            if i % 10 == 0 :
+                iteration_number += 10
+                counter.append(iteration_number)
+                losses.append(loss.item())
+    
+    print("Validation Loss: ", loss)
+    return loss, losses, counter
