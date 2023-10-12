@@ -9,7 +9,6 @@ from PIL import Image
 from torchvision import transforms
 from train import train_fn
 from sklearn.metrics import f1_score,jaccard_score,recall_score,precision_score   
-from deeplabv3 import createDeepLabv3
 import segmentation_models_pytorch as smp
 #from torch.utils.tensorboard import SummaryWriter
 

@@ -6,14 +6,14 @@ from tqdm import tqdm
 import  numpy as np
 
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
 
 
 
 def train_fn(loader, model, optimizer, loss_fn,scaler):
     #since = time.time()
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model.to(device)
+    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(DEVICE)
     losses = []
     model.train()
     # Data size is [batches, in_channels, image_height, image_width]
