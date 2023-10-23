@@ -6,7 +6,7 @@ class SiameseDataset():
     def __init__(self,file_csv=None,files_dir=None,transform=None):
         # used to prepare the labels and images path
         self.df=pd.read_csv(file_csv)
-        self.df.columns =["OI","OD","class_label","label_bi"]
+        self.df.columns =["OI","OD","class_label","label_oi","label_od"]
         self.files_dir = files_dir   
         self.transform = transform
 
@@ -14,7 +14,7 @@ class SiameseDataset():
         # getting the image path
         image1_path=os.path.join(self.files_dir,self.df.iat[index,0])
         image2_path=os.path.join(self.files_dir,self.df.iat[index,1])
-        label=self.df.iat[index,3]#Cogemos la label que solo diferencia entre iris sanos o infectados
+        label=self.df.iat[index,2]#Cogemos la label que solo diferencia entre iris CMV o SURV
         # Loading the image
         img0 = Image.open(image1_path)
         img1 = Image.open(image2_path)

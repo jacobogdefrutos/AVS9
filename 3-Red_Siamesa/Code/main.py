@@ -7,9 +7,9 @@ import torch.optim as optim
 from lenet5 import LeNet5
 import matplotlib.pyplot as plt
 
-TRAIN_DIR= r'Data\saved_test_clas_images\train'
-VAL_DIR= r'Data\saved_test_clas_images\val'
-train_csv='Iris_train_seg_list.csv'
+TRAIN_DIR= r'Data\saved_seg_class_images\train_siamesa'
+VAL_DIR= r'Data\saved_seg_class_images\val'
+train_csv='Iris_train_siamesa_seg_list.csv'
 val_csv='Iris_val_seg_list.csv'
 BATCH_SIZE= 2
 NUM_WORKERS=4
@@ -35,11 +35,9 @@ def main():
     for epoch in range(0, NUM_EPOCHS):
         print("-------------------------------------")
         print("Epoch: ", epoch)
-        train_loss,train_losses_list, counter= train_fn(train_loader,model,optimizer,loss_fn,device=DEVICE)
-        vall_loss,val_losses_list, counter= val_loss(val_loader,model,optimizer,loss_fn,device=DEVICE)
-    fig, axs = plt.subplots(1, 2, figsize=(9, 3), sharey=True)
-    axs[0].plot(counter,train_losses_list)
-    axs[1].plot(counter,val_losses_list)
+        train_loss= train_fn(train_loader,model,optimizer,loss_fn,device=DEVICE)
+        vall_loss= val_loss(val_loader,model,optimizer,loss_fn,device=DEVICE)
+    
 
     print("End of main")
 if __name__ == "__main__":

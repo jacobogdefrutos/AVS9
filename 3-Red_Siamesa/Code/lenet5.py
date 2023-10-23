@@ -20,7 +20,7 @@ class LeNet5(nn.Module):
             nn.Linear(120,84),
             nn.ReLU(inplace=True),
             nn.Linear(84,num_classes),
-            nn.Softmax(dim=1)
+            #nn.Softmax(dim=1)
             
         )
     def forward_once(self, x):
