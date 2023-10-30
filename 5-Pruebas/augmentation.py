@@ -27,10 +27,9 @@ def main():
     for img in file_img_list:
         # Read the image
         image = cv2.imread(os.path.join(TRAIN_IMG_DIR, img))
-        if image  is not None and 'SANO' not in img:
+        if image  is not None and 'SANO' not in img:#('SUF'  in img or 'POSTNER' in img):
             augmented_image,i  = augment_image(image)
-            name = img.split(".png")[0]
-            output_img_path = os.path.join(OUTPUT_IMG_DIR, f"{name}_aug.png")
+            output_img_path = os.path.join(OUTPUT_IMG_DIR, f"{img[:-4]}_aug.png")
             cv2.imwrite(output_img_path, augmented_image)
 
 

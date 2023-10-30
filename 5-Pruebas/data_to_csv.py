@@ -2,8 +2,8 @@ import os
 import csv
 
 def main():
-    directory = r'5-Pruebas/test'  # Replace with your directory path
-    csv_file_name = r'5-Pruebas/test.csv'
+    directory = r'5-Pruebas/Total_images'  # Replace with your directory path
+    csv_file_name = r'5-Pruebas/total_imgs.csv'
     file_train_list = os.listdir(directory)
     #Lo dividimos en tres listas: OD, OI y Label
     file_OD_list= [name for name in file_train_list if 'OD' in name ]
