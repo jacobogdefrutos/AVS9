@@ -2,8 +2,8 @@ import os
 import csv
 
 def main():
-    directory = r'Data/saved_seg_class_images/train_siamesa'  # Replace with your directory path
-    csv_file_name = 'Iris_train_siamesa_seg_list.csv'
+    directory = r'Data/saved_seg_class_images/test'  # Replace with your directory path
+    csv_file_name = 'Iris_test_seg_list.csv'
     file_train_list = os.listdir(directory)
     #Lo dividimos en tres listas: OD, OI y Label
     file_OD_list= [name for name in file_train_list if 'OD' in name ]
