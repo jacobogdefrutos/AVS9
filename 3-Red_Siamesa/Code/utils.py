@@ -67,8 +67,8 @@ def train_fn(loader, model, optimizer, loss_fn,device):
             loss.backward()
             optimizer.step()
     
-    print("Training Loss: ", loss)
-    return loss
+    print("Training Loss: ", loss.item())
+    return loss.item()
 def val_loss(loader,model,optimizer,loss_fn,device):
     print("-----Calculating Validation loss-----")
     model.eval()
@@ -79,5 +79,24 @@ def val_loss(loader,model,optimizer,loss_fn,device):
             prediction1,prediction2 = model(img_OI,img_OD)
             loss = loss_fn(prediction1,prediction2, label)
     
-    print("Validation Loss: ", loss)
-    return loss
+        print("Validation Loss: ", loss.item())
+    return loss.item()
+class save_best_model:
+    def __init__(self, best_valid_loss=float("inf")):
+        self.best_valid_loss = best_valid_loss
+        self.best_valid_loss_epoch = float("inf")
+
+    def __call__(self, current_valid_loss, epoch, model, optimizer, loss_fn):
+        print(f"Current Best Validation Loss: ({self.best_valid_loss})", f"at epoch [{self.best_valid_loss_epoch}]")
+        if current_valid_loss < self.best_valid_loss:
+            self.best_valid_loss = current_valid_loss
+            self.best_valid_loss_epoch = epoch
+            print(f"New Best Validation Loss: ({self.best_valid_loss})", f"at epoch [{self.best_valid_loss_epoch}]")
+            torch.save({
+                "epoch": epoch+1,
+                "model_state_dict": model.state_dict(),
+                "optimer_state_dict": optimizer.state_dict(),
+                "loss": loss_fn,
+                "best_model_epoch": self.best_valid_loss_epoch,
+                "best_model_val": self.best_valid_loss,
+                }, r"/home/jacobo15defrutos/AVS9_1/1-Unet/Code/saved_models/best_model_LeNet5RS.pth.tar")
