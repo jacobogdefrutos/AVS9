@@ -44,12 +44,12 @@ def main():
         vall_loss= val_loss(val_loader,model,optimizer,loss_fn,device=DEVICE)
         trainl_list.append(train_loss)
         vall_list.append(vall_loss)
-        #best_model(vall_loss, epoch, model, optimizer, loss_fn)
+        best_model(vall_loss, epoch, model, optimizer, loss_fn)
 
 
     fig, ax = plt.subplots()
-    ax.plot(trainl_list,counter, label='Train Loss', color='blue')
-    ax.plot(vall_list,counter, label='Validation Loss', color='red')
+    ax.plot(counter,trainl_list, label='Train Loss', color='blue')
+    ax.plot(counter,vall_list, label='Validation Loss', color='red')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss')
     ax.set_title('Training and Validation Loss')

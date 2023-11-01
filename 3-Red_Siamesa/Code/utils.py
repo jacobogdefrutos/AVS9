@@ -32,6 +32,20 @@ def get_loaders(train_csv,val_csv,train_dir,val_dir,batch_size,transform_imag,nu
         drop_last=True
     )
     return train_loader, val_loader
+def get_test(test_csv,test_dir,transform_imag,num_workers,pin_memory=True):
+    test_ds = SiameseDataset(
+        file_csv=test_csv,
+        files_dir=test_dir,
+        transform=transform_imag)
+
+    test_loader = DataLoader(
+        test_ds,
+        batch_size=1,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        shuffle=True,
+        drop_last=True)
+    return test_loader
 class ContrastiveLoss(torch.nn.Module):
     """
     Contrastive loss function.
@@ -57,7 +71,7 @@ def train_fn(loader, model, optimizer, loss_fn,device):
     model.to(device)
     model.train()
     for i,sample in enumerate(loader,0):
-        img_OI,img_OD, label =sample
+        img_OI,img_OD, label,_,_ =sample
         img_OI, img_OD, label = img_OI.to(device=device), img_OD.to(device=device), label.to(device=device)
         optimizer.zero_grad()
         #forward
@@ -74,7 +88,7 @@ def val_loss(loader,model,optimizer,loss_fn,device):
     model.eval()
     with torch.no_grad():
         for i,sample in enumerate(loader,0):
-            img_OI,img_OD, label =sample
+            img_OI,img_OD, label,_,_ =sample
             img_OI, img_OD, label = img_OI.to(device=device), img_OD.to(device=device), label.to(device=device)
             prediction1,prediction2 = model(img_OI,img_OD)
             loss = loss_fn(prediction1,prediction2, label)
@@ -99,4 +113,4 @@ class save_best_model:
                 "loss": loss_fn,
                 "best_model_epoch": self.best_valid_loss_epoch,
                 "best_model_val": self.best_valid_loss,
-                }, r"/home/jacobo15defrutos/AVS9_1/1-Unet/Code/saved_models/best_model_LeNet5RS.pth.tar")
+                }, r"3-Red_Siamesa/saved_models/best_model_LeNet5RS.pth.tar")

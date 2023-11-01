@@ -29,10 +29,12 @@ class SiameseDataset():
         img1_n=cv2.normalize(img1_abs,None,0, 255, cv2.NORM_MINMAX)
         img0_u8= np.uint8(img0_n)
         img1_u8= np.uint8(img1_n)
+        oi_name = str(image1_path)
+        od_name = str(image2_path)
         # Apply image transformations
         if self.transform is not None:
             img0 = self.transform(img0_u8)
             img1 = self.transform(img1_u8)
-        return img0, img1 , label
+        return img0, img1 , label, oi_name,od_name
     def __len__(self):
         return len(self.df)
