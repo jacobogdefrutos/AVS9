@@ -2,7 +2,7 @@ import os
 import csv
 
 def main():
-    directory = r'5-Pruebas/Total_images'  # Replace with your directory path
+    directory = r'Data\Total_images'
     csv_file_name = r'4-Red_Siamesa/Code/total_images_RS.csv'
     file_train_list = os.listdir(directory)
     #Lo dividimos en tres listas: OD, OI y Label
