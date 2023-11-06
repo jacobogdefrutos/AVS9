@@ -2,8 +2,8 @@ import os
 import csv
 
 def main():
-    directory = r'Data\Total_images'
-    csv_file_name = r'4-Red_Siamesa/Code/total_images_RS.csv'
+    directory = r'Data\fotos_segm2'
+    csv_file_name = r'4-Red_Siamesa/Code/seg2_RS.csv'
     file_train_list = os.listdir(directory)
     #Lo dividimos en tres listas: OD, OI y Label
     file_OD_list= [name for name in file_train_list if 'OD' in name ]
