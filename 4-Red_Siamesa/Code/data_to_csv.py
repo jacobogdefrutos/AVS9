@@ -17,10 +17,10 @@ def main():
                 label=0
                 csv_writer.writerow([file_OI_list[idx], name, label])
             elif ('SANO' in name and 'CMV' in file_OI_list[idx]) or ('CMV' in name and 'SANO' in file_OI_list[idx]):
-                label=1
+                label=0
                 csv_writer.writerow([file_OI_list[idx], name, label])
             elif ('SANO' in name and 'SURV' in file_OI_list[idx]) or ('SURV' in name and 'SANO' in file_OI_list[idx]):
-                label=2
+                label=1
                 csv_writer.writerow([file_OI_list[idx], name, label])
 
 if __name__ == "__main__":
