@@ -2,8 +2,8 @@ import os
 import csv
 
 def main():
-    directory = r'5-Pruebas/Total_images'  # Replace with your directory path
-    csv_file_name = r'5-Pruebas/total_imgs.csv'
+    directory = r'/home/jacobo15defrutos/AVS9/Data/fotos_segm2'  # Replace with your directory path
+    csv_file_name = r'4-Red_Siamesa/Code/basic_seg2.csv'
     file_train_list = os.listdir(directory)
     #Lo dividimos en tres listas: OD, OI y Label
     file_OD_list= [name for name in file_train_list if 'OD' in name ]
@@ -13,15 +13,16 @@ def main():
     with open(csv_file_name, 'w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
         for idx,name in enumerate(file_list):
-            if 'SANO'  in name:
-                label=0
-                csv_writer.writerow( [name, label])
-            elif 'CMV'in name:
-                label=1
-                csv_writer.writerow( [name, label])
-            elif 'SURV'in name:
-                label=2
-                csv_writer.writerow( [name, label])
+            if 'TEM' in name:
+                if 'SANO'  in name:
+                    label=0
+                    csv_writer.writerow( [name, label])
+                elif 'CMV'in name:
+                    label=1
+                    csv_writer.writerow( [name, label])
+                elif 'SURV'in name:
+                    label=2
+                    csv_writer.writerow( [name, label])
 
 if __name__ == "__main__":
     main() 
