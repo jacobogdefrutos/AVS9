@@ -15,7 +15,7 @@ import segmentation_models_pytorch as smp
 # Hyperparameters etc.
 LEARNING_RATE = 1e-4
 # Settings for the image
-BATCH_SIZE = 4
+BATCH_SIZE = 1
 NUM_EPOCHS = 7
 NUM_WORKERS = 8 
 IMAGE_HEIGHT = 384 # 720 originally
@@ -30,10 +30,10 @@ LOAD_MODEL = False
 LOAD_CHECKPOINT = False
 SAVE_CHECKPOINT = True
 # Directories
-TRAIN_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/train/Imag"
-TRAIN_MASK_DIR = r"/home/jacobo15defrutos/AVS9/Data/train/Labels"
-VAL_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/val/Imag"
-VAL_MASK_DIR =  r"/home/jacobo15defrutos/AVS9/Data/val/Labels"
+TRAIN_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/Prueba/Imag"
+TRAIN_MASK_DIR = r"/home/jacobo15defrutos/AVS9/Data/Prueba/Labels"
+VAL_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/Prueba/Imag"
+VAL_MASK_DIR =  r"/home/jacobo15defrutos/AVS9/Data/Prueba/Labels"
 
 
 # define the torchvision image transforms
