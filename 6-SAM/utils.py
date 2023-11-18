@@ -1,10 +1,12 @@
 
 from tqdm import tqdm
+import re
+import cv2
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
+from sklearn.metrics import f1_score,jaccard_score,recall_score,precision_score
 import torch
-
 from dataset import IrisDataset
 from torch.utils.data import DataLoader, random_split
 
@@ -63,7 +65,8 @@ class FocalLoss(nn.Module):
         alpha=0.5
         gamma=2
         inputs = inputs.flatten(0,2)
-        BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')#cambiar
+        targets= targets.float()
+        BCE = F.binary_cross_entropy_with_logits(inputs, targets, reduction='mean')#cambiar
         BCE_EXP = torch.exp(-BCE)
         focal_loss = alpha * (1 - BCE_EXP)**gamma * BCE
 
@@ -99,3 +102,125 @@ def criterion(x, y,DEVICE):
     y = y.to(DEVICE)
     x = x.to(DEVICE)
     return 20 * focal(x, y) + dice(x, y)
+def val_loss(loader,model,boxes_dic,transform,metrics, epoch,folder, device="cuda"):
+    print("-----Validation data-----")
+    IoU_iris_list =[]
+    PPV_iris_list =[]
+    Recall_iris_list =[]
+    model.eval()
+    running_vloss=0
+    with torch.no_grad():
+        for i, sample in enumerate(iter(loader)):
+            ppv=0
+            recall=0
+            image = sample['image'].squeeze(1).to(device)
+            mask= sample['mask'].squeeze(1).long().to(device)
+            mask=mask[0]
+            idx= sample['idx'].item()
+            og_y,og_x= sample['original_image_size']
+            original_image_size=(og_y.item(),og_x.item())
+            prompt_box=boxes_dic[idx]['cords']
+            box = transform.apply_boxes(prompt_box, original_image_size)
+            box_torch = torch.as_tensor(box, dtype=torch.float, device=device)
+            box_torch = box_torch[None, :]
+            total_mask = get_totalmask(mask)
+            total_mask = total_mask.to(device)
+            preds, iou = model(image,box_torch)
+            vloss = criterion(preds, total_mask,device)
+            running_vloss += vloss.item()
+            preds_prob = torch.sigmoid(preds.squeeze(1))# shape (1,1024,1024)
+            preds_prob_numpy = preds_prob.cpu().numpy().squeeze()
+            preds_binary = (preds_prob_numpy > 0.5).astype(np.uint8)
+            if len(np.unique(preds_binary))>1:
+                ppv=precision_score(total_mask.numpy(),preds_binary,average='micro')
+                recall= recall_score(total_mask.numpy(),preds_binary,average='micro')
+
+            draw_translucent_seg_maps(image, preds_binary, epoch,idx,folder)
+            IoU_iris_list.append(iou.item())
+            PPV_iris_list.append(ppv)
+            Recall_iris_list.append(recall)
+        mean_IoU_iris = np.mean(IoU_iris_list)
+        mean_PPV_iris = np.mean(PPV_iris_list)
+        mean_Recall_iris = np.mean(Recall_iris_list)
+        avg_vloss = running_vloss / len(loader)
+        print(f'epoch: {epoch}, validloss: {avg_vloss}')
+        print("     Iris IoU: ", mean_IoU_iris, "%")
+        print("     Irris PPV: ", mean_PPV_iris, "%")
+        print("     Iris Recall: ", mean_Recall_iris, "%")
+        #print(f"    Iris F1_score: {mean_f1_score_iris} %")
+    return avg_vloss
+def find_number_in_string(input_string):
+    # Regular expression to find a number in a string
+    pattern = r'\d+'
+
+    # Search for the pattern in the input string
+    match = re.search(pattern, input_string)
+
+    # Check if a match is found
+    if match:
+        # Extract and return the matched number
+        return int(match.group())
+
+    # Return None if no number is found
+    return None
+def draw_translucent_seg_maps(data, output,epoch, i,folder):
+    """
+    This function color codes the segmentation maps that is generated while
+    validating. THIS IS NOT TO BE CALLED FOR SINGLE IMAGE TESTING
+    """
+    alpha = 1 # how much transparency
+    beta = 0.6 # alpha + beta should be 1
+    gamma = 0 # contrast
+    label_color_map = np.array([[0.0, 0.0, 0.0], [255.0, 0.0, 0.0]], dtype=np.float32)
+    seg_map = output # use only one output from the batch y queremos shape (H,W)
+    #seg_map = torch.argmax(seg_map, dim=0).detach().cpu().numpy()
+    image = data[0]# queremos formato (C,H,W)
+    ## unnormalize the image (important step)
+    #mean = np.array([0.0, 0.0, 0.0])
+    #std = np.array([1.0, 1.0, 1.0])
+    #image = std * image + mean
+    image = np.array(image, dtype=np.float32)
+    image = np.transpose(image, (1, 2, 0))
+    #image = image * 255
+    red_map = np.zeros_like(seg_map).astype(np.uint8)
+    green_map = np.zeros_like(seg_map).astype(np.uint8)
+    blue_map = np.zeros_like(seg_map).astype(np.uint8)
+
+
+    for label_num in range(0, len(label_color_map)):
+        index = seg_map == label_num
+        red_map[index] = np.array(label_color_map)[label_num][0] #(H,W)
+        green_map[index] = np.array(label_color_map)[label_num][1]
+        blue_map[index] = np.array(label_color_map)[label_num][2]
+
+    rgb = np.stack([red_map, green_map, blue_map], axis=2)#(H,W,C)
+    rgb = np.array(rgb, dtype=np.float32)
+    # convert color to BGR format for OpenCV
+    rgb = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+    # cv2.imshow('rgb', rgb)
+    # cv2.waitKey(0)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.addWeighted(image, alpha, rgb, beta, gamma, image)
+    cv2.imwrite(f"{folder}/val_{i}_{epoch}.png", image)
+
+class save_best_model:
+    def __init__(self, best_valid_loss=float("inf")):
+        self.best_valid_loss = best_valid_loss
+        self.best_valid_loss_epoch = float("inf")
+
+    def __call__(self, current_valid_loss, epoch, model, optimizer):
+        print(f"Current Best Validation Loss: ({self.best_valid_loss})", f"at epoch [{self.best_valid_loss_epoch}]")
+        if current_valid_loss < self.best_valid_loss:
+            self.best_valid_loss = current_valid_loss
+            self.best_valid_loss_epoch = epoch
+            print(f"New Best Validation Loss: ({self.best_valid_loss})", f"at epoch [{self.best_valid_loss_epoch}]")
+            torch.save({
+                "epoch": epoch+1,
+                "model_state_dict": model.state_dict(),
+                "optimer_state_dict": optimizer.state_dict(),
+                #"loss": loss_fn,
+                "best_model_epoch": self.best_valid_loss_epoch,
+                "best_model_val": self.best_valid_loss,
+                }, r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_yoloSAM.pth.tar")
+        
+        

@@ -50,6 +50,7 @@ class IrisDataset(VisionDataset):
         image = np.array(Image.open(img_path).convert("RGB"))
         mask = np.array(Image.open(mask_path).convert("RGB"))/255
         mask= mask.astype(np.uint8)
+        og_img_size = image.shape[:2]
         image = cv2.resize(image, (400, 400))
         mask = cv2.resize(mask, (400, 400))
         mask= mask[:,:,1]#.astype(float)
@@ -61,7 +62,7 @@ class IrisDataset(VisionDataset):
         transformed_image = input_image_torch.permute(2, 0, 1).contiguous()[None, :, :, :]
         transformed_mask = input_mask_torch.permute(2, 0, 1).contiguous()[None, :, :, :]
         number= find_number_in_string( str(img_path).split('/')[-1][:-4])
-        sample = {"image": transformed_image, "mask": transformed_mask, "idx":number}
+        sample = {"image": transformed_image, "mask": transformed_mask, "idx":number,"original_image_size": og_img_size}
         
         return sample
 

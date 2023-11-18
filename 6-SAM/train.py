@@ -1,7 +1,8 @@
 import utils
 from tqdm import tqdm
+import torch
 import torch.nn as nn
-def train_one_epoch(model, trainloader, optimizer, epoch_idx,device):#tb_writer
+def train_one_epoch(model, trainloader, boxes_dic,transform, optimizer, epoch_idx,device):#tb_writer
     """ Runs forward and backward pass for one epoch and returns the average
     batch loss for the epoch.
     ARGS:
@@ -16,24 +17,31 @@ def train_one_epoch(model, trainloader, optimizer, epoch_idx,device):#tb_writer
     """
     running_loss = 0.
     for  sample in tqdm(iter(trainloader)):
-        image = sample['image'][0].to(device)
-        mask= sample['mask'][0].long().to(device)
+        image = sample['image'].squeeze(1).to(device)
+        mask= sample['mask'].squeeze(1).long().to(device)
+        idx= sample['idx'].item()
+        og_y,og_x= sample['original_image_size']
+        original_image_size=(og_y.item(),og_x.item())
+        prompt_box=boxes_dic[idx]['cords']
+        box = transform.apply_boxes(prompt_box, original_image_size)
+        box_torch = torch.as_tensor(box, dtype=torch.float, device=device)
+        box_torch = box_torch[None, :]
         optimizer.zero_grad()
-        pred, _ = model(image)
+        pred, _ = model(image,box_torch)
         #print(f'pred shape: {pred.shape}')
         mask = mask[0]
         total_mask = utils.get_totalmask(mask)
         pred = pred.to(device)
-        #loss = utils.criterion(pred, total_mask,device)
-        loss_fn= nn.CrossEntropyLoss()
-        loss = loss_fn(pred, mask).requires_grad_()#tuve un error q decia expected scalar type Long, but found Byte
+        loss = utils.criterion(pred, total_mask,device)
+        #loss_fn= nn.CrossEntropyLoss()
+        #loss = loss_fn(pred, mask).requires_grad_()#tuve un error q decia expected scalar type Long, but found Byte
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
 
     i = len(trainloader)
     last_loss = running_loss / i
-    print(f'batch_loss for batch {i}: {last_loss}')
+    print(f'Training batch_loss for batch {i}: {last_loss}')
     tb_x = epoch_idx * len(trainloader) + i + 1
     #tb_writer.add_scalar('Loss/train', last_loss, tb_x)
     running_loss = 0.

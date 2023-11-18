@@ -41,13 +41,16 @@ class ModelSimple(nn.Module):
             for param in self.model.mask_decoder.parameters():
                 param.requires_grad = False
         self.transfrom = ResizeLongestSide(self.model.image_encoder.img_size)
-    def forward(self, images):
+        num_output_classes=2
+        self.model.mask_decoder.iou_prediction_head.layers[2]=nn.Linear(in_features=256, out_features=num_output_classes, bias=True)
+    def forward(self, images,bboxes):
         _, _, H, W = images.shape # batch, channel, height, width
         image_embeddings = self.model.image_encoder(images) # shape: (1, 256, 64, 64)
+        
         # get prompt embeddings without acutally any prompts (uninformative) at the moment
         sparse_embeddings, dense_embeddings = self.model.prompt_encoder(
             points=None,
-            boxes=None,
+            boxes=bboxes,
             masks=None,
         )
         low_res_masks, iou_predictions = self.model.mask_decoder(
@@ -57,10 +60,11 @@ class ModelSimple(nn.Module):
             dense_prompt_embeddings=dense_embeddings, # dense_embeddings shape: (1, 256, 256)
             multimask_output=False,
         )
-        masks = F.interpolate(
-            low_res_masks, # shape: (1, 1, 256, 256)
+        upscaled_masks = F.interpolate(
+            low_res_masks, # shape: (1, n_classes, 256, 256)
             (H, W),
             mode="bilinear",
             align_corners=False,
         )
-        return masks, iou_predictions
+    
+        return upscaled_masks, iou_predictions
