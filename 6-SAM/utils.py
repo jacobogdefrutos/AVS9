@@ -9,6 +9,21 @@ from sklearn.metrics import f1_score,jaccard_score,recall_score,precision_score
 import torch
 from dataset import IrisDataset
 from torch.utils.data import DataLoader, random_split
+import os
+
+def get_test(test_dir, test_maskdir,num_workers, transform, pin_memory=True):
+    test_ds = IrisDataset( 
+        image_dir=test_dir,
+        mask_dir=test_maskdir,
+        transform = transform)
+    test_loader= DataLoader(
+        test_ds,
+        batch_size=1,
+        shuffle=False, 
+        num_workers=num_workers,
+        pin_memory=pin_memory)
+    names = os.listdir(test_dir)
+    return test_loader, names
 
 def get_loaders(train_dir,train_maskdir,batch_size,transform,num_workers,pin_memory=True):
     
@@ -102,11 +117,13 @@ def criterion(x, y,DEVICE):
     y = y.to(DEVICE)
     x = x.to(DEVICE)
     return 20 * focal(x, y) + dice(x, y)
-def val_loss(loader,model,boxes_dic,transform,metrics, epoch,folder, device="cuda"):
+def val_loss(loader,model,boxes_dic,transform, epoch,folder, device="cuda"):
     print("-----Validation data-----")
     IoU_iris_list =[]
+    IoU_iris_list_sam=[]
     PPV_iris_list =[]
     Recall_iris_list =[]
+    f1_score_iris_list=[]
     model.eval()
     running_vloss=0
     with torch.no_grad():
@@ -134,20 +151,27 @@ def val_loss(loader,model,boxes_dic,transform,metrics, epoch,folder, device="cud
             if len(np.unique(preds_binary))>1:
                 ppv=precision_score(total_mask.numpy(),preds_binary,average='micro')
                 recall= recall_score(total_mask.numpy(),preds_binary,average='micro')
+                iou_sklearn= jaccard_score(total_mask.numpy(),preds_binary,average='micro')
+                f1_score=f1_score(total_mask.numpy(),preds_binary,average='micro')
 
             draw_translucent_seg_maps(image, preds_binary, epoch,idx,folder)
-            IoU_iris_list.append(iou.item())
+            IoU_iris_list_sam.append(iou.item())
+            IoU_iris_list.append(iou_sklearn)
             PPV_iris_list.append(ppv)
             Recall_iris_list.append(recall)
+            f1_score_iris_list.append(f1_score)
+        mean_IoU_iris_sam = np.mean(IoU_iris_list_sam)
         mean_IoU_iris = np.mean(IoU_iris_list)
         mean_PPV_iris = np.mean(PPV_iris_list)
         mean_Recall_iris = np.mean(Recall_iris_list)
+        mean_f1_score_iris=np.mean(f1_score_iris_list)
         avg_vloss = running_vloss / len(loader)
-        print(f'epoch: {epoch}, validloss: {avg_vloss}')
-        print("     Iris IoU: ", mean_IoU_iris, "%")
-        print("     Irris PPV: ", mean_PPV_iris, "%")
-        print("     Iris Recall: ", mean_Recall_iris, "%")
-        #print(f"    Iris F1_score: {mean_f1_score_iris} %")
+        print(f'Epoch: {epoch}, validloss: {avg_vloss}')
+        print("     Iris IoU from SAM: ", mean_IoU_iris_sam*100, "%")
+        print("     Iris IoU sklearn: ", mean_IoU_iris*100, "%")
+        print("     Irris PPV: ", mean_PPV_iris*100, "%")
+        print("     Iris Recall: ", mean_Recall_iris*100, "%")
+        print(f"    Iris F1_score: {mean_f1_score_iris*100} %")
     return avg_vloss
 def find_number_in_string(input_string):
     # Regular expression to find a number in a string

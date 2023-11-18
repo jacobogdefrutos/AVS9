@@ -41,8 +41,8 @@ def train_one_epoch(model, trainloader, boxes_dic,transform, optimizer, epoch_id
 
     i = len(trainloader)
     last_loss = running_loss / i
-    print(f'Training batch_loss for batch {i}: {last_loss}')
-    tb_x = epoch_idx * len(trainloader) + i + 1
+    print(f'Epoch: {epoch_idx}, Training loss: {last_loss}')
+    #tb_x = epoch_idx * len(trainloader) + i + 1
     #tb_writer.add_scalar('Loss/train', last_loss, tb_x)
     running_loss = 0.
     return last_loss
