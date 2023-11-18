@@ -56,7 +56,6 @@ def main():
     )
     #Train the model
     best_model = utils.save_best_model()
-    metrics= {'f1_score': f1_score, 'PPV': precision_score, 'IoU': jaccard_score, 'Recall': recall_score }
     optimizer = optim.Adam(model_sam.parameters(), lr=LEARNING_RATE) #THE OPTIMIZER CAN BE CHANGED
     best_valid_loss = float('inf')
     val_folder= '/home/jacobo15defrutos/AVS9/6-SAM/Results_val_seg'
@@ -65,7 +64,7 @@ def main():
         running_vloss = 0.
         model_sam.train(True)
         avg_batchloss = train_one_epoch(model_sam, train_loader, boxes_dic,transform,optimizer, epoch,device)
-        avg_valloss = val_loss(val_loader,model_sam,boxes_dic,transform,metrics,epoch,val_folder,device)
+        avg_valloss = val_loss(val_loader,model_sam,boxes_dic,transform,epoch,val_folder,device)
         best_model(avg_valloss, epoch, model_sam, optimizer)
 
     print("End of main")
