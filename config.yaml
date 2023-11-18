@@ -1,0 +1,5 @@
+train: /home/jacobo15defrutos/AVS9/Data/Data_box_yolo/train/images
+val: /home/jacobo15defrutos/AVS9/Data/Data_box_yolo/val/images
+
+nc: 1
+names: ['iris']
