@@ -1,8 +1,8 @@
 from ultralytics import YOLO
 from collections import defaultdict
-from segment_anything.utils.transforms import ResizeLongestSide
-import utils
-from sklearn.metrics import f1_score,jaccard_score,recall_score,precision_score   
+from resize import resize_images
+import matplotlib.pyplot as plt
+import utils 
 from utils import get_loaders, val_loss,find_number_in_string
 from model import ModelSimple
 from train import train_one_epoch
@@ -15,13 +15,16 @@ DATA_MASK_DIR= '/home/jacobo15defrutos/AVS9/Data/Data_seg_SAM/train/labels'
 BATCH_SIZE=1
 NUM_WORKERS=8
 PIN_MEMORY=True
-NUM_EPOCHS=10
+NUM_EPOCHS=25
 LEARNING_RATE = 0.001
+NEW_SIZE = (800,800)
 
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model_yolo = YOLO("/home/jacobo15defrutos/AVS9/6-SAM/runs/detect/train/weights/best.pt")
+    resize_images(DATA_IMG_DIR, DATA_IMG_DIR, NEW_SIZE)
+    resize_images(DATA_MASK_DIR, DATA_MASK_DIR, NEW_SIZE)
+    model_yolo = YOLO("/home/jacobo15defrutos/AVS9/6-SAM/runs/detect/train3/weights/best.pt")
     #model_yolo = model_yolo.load(weights='/home/jacobo15defrutos/AVS9/yolov8s.pt')
     model_sam = ModelSimple()
     model_sam.setup()
@@ -55,6 +58,8 @@ def main():
         PIN_MEMORY,
     )
     #Train the model
+    train_losses = []
+    val_losses = []
     best_model = utils.save_best_model()
     optimizer = optim.Adam(model_sam.parameters(), lr=LEARNING_RATE) #THE OPTIMIZER CAN BE CHANGED
     best_valid_loss = float('inf')
@@ -65,7 +70,20 @@ def main():
         model_sam.train(True)
         avg_batchloss = train_one_epoch(model_sam, train_loader, boxes_dic,transform,optimizer, epoch,device)
         avg_valloss = val_loss(val_loader,model_sam,boxes_dic,transform,epoch,val_folder,device)
+        train_losses.append(avg_batchloss)
+        val_losses.append(avg_valloss)
         best_model(avg_valloss, epoch, model_sam, optimizer)
+    
+
+    # Plotting
+    epochs = range(1, NUM_EPOCHS + 1)
+    plt.plot(epochs, train_losses, label='Training Loss')
+    plt.plot(epochs, val_losses, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss over Epochs')
+    plt.legend()
+    plt.show()
 
     print("End of main")
 

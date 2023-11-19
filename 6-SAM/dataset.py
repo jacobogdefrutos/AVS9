@@ -51,8 +51,9 @@ class IrisDataset(VisionDataset):
         mask = np.array(Image.open(mask_path).convert("RGB"))/255
         mask= mask.astype(np.uint8)
         og_img_size = image.shape[:2]
-        image = cv2.resize(image, (400, 400))
-        mask = cv2.resize(mask, (400, 400))
+        image = cv2.resize(image, (800, 800))
+        mask = cv2.resize(mask, (800, 800))
+        og_img_size = image.shape[:2]
         mask= mask[:,:,1]#.astype(float)
         input_image = self.transform.apply_image(image)
         input_mask = self.transform.apply_image(mask)

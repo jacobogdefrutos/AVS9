@@ -245,6 +245,6 @@ class save_best_model:
                 #"loss": loss_fn,
                 "best_model_epoch": self.best_valid_loss_epoch,
                 "best_model_val": self.best_valid_loss,
-                }, r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_yoloSAM.pth.tar")
+                }, r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_yoloSAM_25_epochs.pth.tar")
         
         
