@@ -117,7 +117,7 @@ def criterion(x, y,DEVICE):
     y = y.to(DEVICE)
     x = x.to(DEVICE)
     return 20 * focal(x, y) + dice(x, y)
-def val_loss(loader,model,boxes_dic,transform, epoch,folder, device="cuda"):
+def val_loss(loader,model,transform, epoch,folder, device="cuda"):#boxes_dic
     print("-----Validation data-----")
     IoU_iris_list =[]
     IoU_iris_list_sam=[]
@@ -136,7 +136,9 @@ def val_loss(loader,model,boxes_dic,transform, epoch,folder, device="cuda"):
             idx= sample['idx'].item()
             og_y,og_x= sample['original_image_size']
             original_image_size=(og_y.item(),og_x.item())
-            prompt_box=boxes_dic[idx]['cords']
+            #prompt_box=boxes_dic[idx]['cords']
+            tensor_box= sample['box']
+            prompt_box = np.array([tensor.item() for tensor in tensor_box])
             box = transform.apply_boxes(prompt_box, original_image_size)
             box_torch = torch.as_tensor(box, dtype=torch.float, device=device)
             box_torch = box_torch[None, :]
@@ -147,19 +149,25 @@ def val_loss(loader,model,boxes_dic,transform, epoch,folder, device="cuda"):
             running_vloss += vloss.item()
             preds_prob = torch.sigmoid(preds.squeeze(1))# shape (1,1024,1024)
             preds_prob_numpy = preds_prob.cpu().numpy().squeeze()
-            preds_binary = (preds_prob_numpy > 0.5).astype(np.uint8)
+            preds_binary = (preds_prob_numpy > 0.9).astype(np.uint8)
             if len(np.unique(preds_binary))>1:
                 ppv=precision_score(total_mask.numpy(),preds_binary,average='micro')
                 recall= recall_score(total_mask.numpy(),preds_binary,average='micro')
                 iou_sklearn= jaccard_score(total_mask.numpy(),preds_binary,average='micro')
-                f1_score=f1_score(total_mask.numpy(),preds_binary,average='micro')
+                f_score=f1_score(total_mask.numpy(),preds_binary,average='micro')
+            else:
+                ppv=0
+                recall=0
+                iou_sklearn=0
+                f_score=0
 
             draw_translucent_seg_maps(image, preds_binary, epoch,idx,folder)
             IoU_iris_list_sam.append(iou.item())
             IoU_iris_list.append(iou_sklearn)
             PPV_iris_list.append(ppv)
             Recall_iris_list.append(recall)
-            f1_score_iris_list.append(f1_score)
+            f1_score_iris_list.append(f_score)
+
         mean_IoU_iris_sam = np.mean(IoU_iris_list_sam)
         mean_IoU_iris = np.mean(IoU_iris_list)
         mean_PPV_iris = np.mean(PPV_iris_list)
@@ -225,7 +233,7 @@ def draw_translucent_seg_maps(data, output,epoch, i,folder):
     # cv2.waitKey(0)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     cv2.addWeighted(image, alpha, rgb, beta, gamma, image)
-    cv2.imwrite(f"{folder}/val_{i}_{epoch}.png", image)
+    cv2.imwrite(f"{folder}/test_{i}_{epoch}.png", image)
 
 class save_best_model:
     def __init__(self, best_valid_loss=float("inf")):
@@ -245,6 +253,6 @@ class save_best_model:
                 #"loss": loss_fn,
                 "best_model_epoch": self.best_valid_loss_epoch,
                 "best_model_val": self.best_valid_loss,
-                }, r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_yoloSAM_25_epochs.pth.tar")
+                }, r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_SAM_5_epochs.pth.tar")
         
         
