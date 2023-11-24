@@ -70,7 +70,7 @@ class IrisDataset(VisionDataset):
         mask = cv2.resize(mask, (800, 800))
         og_img_size = image.shape[:2]
         mask= mask[:,:,1]#.astype(float)
-        bbox=get_bounding_box(mask)
+        #bbox=get_bounding_box(mask)
         input_image = self.transform.apply_image(image)
         input_mask = self.transform.apply_image(mask)
         input_image_torch = torch.as_tensor(input_image,dtype=torch.float32)
@@ -79,7 +79,7 @@ class IrisDataset(VisionDataset):
         transformed_image = input_image_torch.permute(2, 0, 1).contiguous()[None, :, :, :]
         transformed_mask = input_mask_torch.permute(2, 0, 1).contiguous()[None, :, :, :]
         number= find_number_in_string( str(img_path).split('/')[-1][:-4])
-        sample = {"image": transformed_image, "mask": transformed_mask,"box":bbox, "idx":number,"original_image_size": og_img_size}
+        sample = {"image": transformed_image, "mask": transformed_mask, "idx":number,"original_image_size": og_img_size}
         
         return sample
 

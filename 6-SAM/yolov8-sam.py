@@ -1,6 +1,6 @@
 from ultralytics import YOLO
 from collections import defaultdict
-from resize import resize_images
+from resize import resize_image_with_pading
 import matplotlib.pyplot as plt
 import utils 
 from utils import get_loaders, val_loss,find_number_in_string
@@ -10,8 +10,8 @@ import numpy as np
 import torch.optim as optim
 import torch
 import os
-DATA_IMG_DIR= '/home/jacobo15defrutos/AVS9/Data/Data_seg_SAM/train/images'
-DATA_MASK_DIR= '/home/jacobo15defrutos/AVS9/Data/Data_seg_SAM/train/labels'
+DATA_IMG_DIR= '/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/train/images'
+DATA_MASK_DIR= '/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/train/labels'
 BATCH_SIZE=1
 NUM_WORKERS=8
 PIN_MEMORY=True
@@ -20,15 +20,16 @@ LEARNING_RATE = 0.001
 NEW_SIZE = (800,800)
 
 
+
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #model_yolo = YOLO("/home/jacobo15defrutos/AVS9/6-SAM/runs/detect/train3/weights/best.pt")
-    #model_yolo = model_yolo.load(weights='/home/jacobo15defrutos/AVS9/yolov8s.pt')
+    model_yolo = YOLO("/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best.pt")
     model_sam = ModelSimple()
     model_sam.setup()
     transform = model_sam.transform
     #Use Yolo to get the boxes en each one of the train data images
-    """""
+    #resize_image_with_pading(DATA_IMG_DIR,DATA_IMG_DIR,NEW_SIZE)
+    #resize_image_with_pading(DATA_MASK_DIR,DATA_MASK_DIR,NEW_SIZE)
     preds= model_yolo.predict(DATA_IMG_DIR)
     boxes_dic= defaultdict(dict)
     for pred in preds:
@@ -45,7 +46,7 @@ def main():
         else:
             x_min,y_min,x_max,y_max =[0,0,pred.orig_shape[1],pred.orig_shape[0]]
             box_sam=[x_min, y_min, x_max, y_max]
-            boxes_dic[number]['cords']=np.array(box_sam)"""""
+            boxes_dic[number]['cords']=np.array(box_sam)
     
     #Load the data
     train_loader, val_loader = get_loaders(
@@ -67,8 +68,8 @@ def main():
         print(f"-----------Epoch: {epoch}------------")
         running_vloss = 0.
         model_sam.train(True)
-        avg_batchloss = train_one_epoch(model_sam, train_loader,transform,optimizer, epoch,device)
-        avg_valloss = val_loss(val_loader,model_sam,transform,epoch,val_folder,device)
+        avg_batchloss = train_one_epoch(model_sam, train_loader,transform,boxes_dic,optimizer, epoch,device)
+        avg_valloss = val_loss(val_loader,model_sam,transform,boxes_dic,epoch,val_folder,device)
         train_losses.append(avg_batchloss)
         val_losses.append(avg_valloss)
         best_model(avg_valloss, epoch, model_sam, optimizer)

@@ -3,7 +3,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import numpy as np
-def train_one_epoch(model, trainloader,transform, optimizer, epoch_idx,device):#tb_writer,boxes_dic
+def train_one_epoch(model, trainloader,transform,boxes_dic, optimizer, epoch_idx,device):#tb_writer,boxes_dic
     """ Runs forward and backward pass for one epoch and returns the average
     batch loss for the epoch.
     ARGS:
@@ -23,9 +23,9 @@ def train_one_epoch(model, trainloader,transform, optimizer, epoch_idx,device):#
         idx= sample['idx'].item()
         og_y,og_x= sample['original_image_size']
         original_image_size=(og_y.item(),og_x.item())
-        #prompt_box=boxes_dic[idx]['cords']
-        tensor_box= sample['box']
-        prompt_box = np.array([tensor.item() for tensor in tensor_box])
+        prompt_box=boxes_dic[idx]['cords']
+        #tensor_box= sample['box']
+        #prompt_box = np.array([tensor.item() for tensor in tensor_box])
         box = transform.apply_boxes(prompt_box, original_image_size)
         box_torch = torch.as_tensor(box, dtype=torch.float, device=device)
         box_torch = box_torch[None, :]

@@ -117,7 +117,7 @@ def criterion(x, y,DEVICE):
     y = y.to(DEVICE)
     x = x.to(DEVICE)
     return 20 * focal(x, y) + dice(x, y)
-def val_loss(loader,model,transform, epoch,folder, device="cuda"):#boxes_dic
+def val_loss(loader,model,transform,boxes_dic, epoch,folder, device="cuda"):#boxes_dic
     print("-----Validation data-----")
     IoU_iris_list =[]
     IoU_iris_list_sam=[]
@@ -136,9 +136,9 @@ def val_loss(loader,model,transform, epoch,folder, device="cuda"):#boxes_dic
             idx= sample['idx'].item()
             og_y,og_x= sample['original_image_size']
             original_image_size=(og_y.item(),og_x.item())
-            #prompt_box=boxes_dic[idx]['cords']
-            tensor_box= sample['box']
-            prompt_box = np.array([tensor.item() for tensor in tensor_box])
+            prompt_box=boxes_dic[idx]['cords']
+            #tensor_box= sample['box']
+            #prompt_box = np.array([tensor.item() for tensor in tensor_box])
             box = transform.apply_boxes(prompt_box, original_image_size)
             box_torch = torch.as_tensor(box, dtype=torch.float, device=device)
             box_torch = box_torch[None, :]
@@ -253,6 +253,6 @@ class save_best_model:
                 #"loss": loss_fn,
                 "best_model_epoch": self.best_valid_loss_epoch,
                 "best_model_val": self.best_valid_loss,
-                }, r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_SAM_5_epochs.pth.tar")
+                }, r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_newyoloSAM_20_epochs.pth.tar")
         
         

@@ -11,9 +11,9 @@ from collections import defaultdict
 
 
 BEST_M_CHECKPOINT_DIR = r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_SAM_11_epochs.pth.tar"
-TEST_IMG_DIR = r"Data/Data_seg_SAM/test/Imag" 
-TEST_MASK_DIR = r"Data/Data_seg_SAM/test/Labels" #Dejo este path pero no vamos a necesitarlo
-NUM_WORKERS=1
+TEST_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Fotos_clasificadas/Imag" 
+TEST_MASK_DIR = r"/home/jacobo15defrutos/AVS9/Fotos_clasificadas/Labels" #Dejo este path pero no vamos a necesitarlo
+NUM_WORKERS=8
 PIN_MEMORY=True
 def output(loader,model_sam,transform,names,folder, device):
     IoU_iris_list =[]
@@ -42,7 +42,7 @@ def output(loader,model_sam,transform,names,folder, device):
             #ahora pintamos de negro el background y mantenemos la segmentacion
             preds_prob = torch.sigmoid(preds.squeeze(1))# shape (1,1024,1024)
             preds_prob_numpy = preds_prob.cpu().numpy().squeeze()
-            preds_binary = (preds_prob_numpy > 0.9).astype(np.uint8)
+            preds_binary = (preds_prob_numpy > 0.85).astype(np.uint8)
             test_image= image[0].numpy()
             test_image = np.array(test_image, dtype=np.uint8)
             test_image = np.transpose(test_image, (1, 2, 0))
@@ -72,6 +72,7 @@ def output(loader,model_sam,transform,names,folder, device):
             plt.close('all')
             """
             draw_translucent_seg_maps(image, preds_binary, 1000,idx,folder)
+            """""
             if len(np.unique(preds_binary))>1:
                 ppv=precision_score(total_mask.numpy(),preds_binary,average='micro')
                 recall= recall_score(total_mask.numpy(),preds_binary,average='micro')
@@ -95,7 +96,7 @@ def output(loader,model_sam,transform,names,folder, device):
     print("     Irris PPV: ", mean_PPV_iris*100, "%")
     print("     Iris Recall: ", mean_Recall_iris*100, "%")
     print(f"    Iris F1_score: {mean_f1_score_iris*100} %")
-
+    """
 def main():
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model_sam = ModelSimple()
@@ -118,7 +119,7 @@ def main():
         )
 
     print("Generate segmentations")
-    folder_test2 =r"/home/jacobo15defrutos/AVS9/6-SAM/Results_test_seg"
+    folder_test2 =r"/home/jacobo15defrutos/AVS9/Data/saved_test_images"
     output(testloader,model_sam,transform,names,folder_test2,device=DEVICE)
 if __name__ == "__main__":
     main()
