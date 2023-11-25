@@ -53,7 +53,7 @@ def resize_image_with_pading(input_folder,output_folder,target_size):
 
             # Save the result in the output folder
             unique_id=id_creation(filename)
-            result_path = os.path.join(output_folder, f"{unique_id}{filename[3:]}")
+            result_path = os.path.join(output_folder, f"{unique_id}{filename[8:]}")
             new_image.save(result_path)
 
 def resize_images(input_path, output_path, new_size):

@@ -69,7 +69,7 @@ class IrisDataset(VisionDataset):
         image = cv2.resize(image, (800, 800))
         mask = cv2.resize(mask, (800, 800))
         og_img_size = image.shape[:2]
-        mask= mask[:,:,1]#.astype(float)
+        mask= mask[:,:,0]#.astype(float)
         #bbox=get_bounding_box(mask)
         input_image = self.transform.apply_image(image)
         input_mask = self.transform.apply_image(mask)
