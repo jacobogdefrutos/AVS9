@@ -11,7 +11,7 @@ from resize import resize_image_with_pading
 
 
 
-BEST_M_CHECKPOINT_DIR = r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_SAM_11_epochs.pth.tar"
+BEST_M_CHECKPOINT_DIR = r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_newyoloSAM_20_epochs.pth.tar"
 TEST_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/test/Imag" 
 TEST_MASK_DIR = r"/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/test/Labels" #Dejo este path pero no vamos a necesitarlo
 NUM_WORKERS=8
@@ -108,8 +108,8 @@ def main():
     model_sam.load_state_dict(best_checkpoint['model_state_dict'])
     model_sam.to(DEVICE)
     model_sam.eval()
-    resize_image_with_pading(TEST_IMG_DIR,TEST_IMG_DIR,NEW_SIZE)
-    resize_image_with_pading(TEST_MASK_DIR,TEST_MASK_DIR,NEW_SIZE)
+    #resize_image_with_pading(TEST_IMG_DIR,TEST_IMG_DIR,NEW_SIZE)
+    #resize_image_with_pading(TEST_MASK_DIR,TEST_MASK_DIR,NEW_SIZE)
     print("Loading model is done.")
     preds= model_yolo.predict(TEST_IMG_DIR)
     boxes_dic= defaultdict(dict)

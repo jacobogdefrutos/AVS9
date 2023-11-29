@@ -2,6 +2,7 @@ import numpy as np
 import torchvision
 import torch.nn as nn
 import cv2
+import matplotlib.pyplot as plt
 import torch
 import utils
 import torch.optim as optim
@@ -13,13 +14,13 @@ import segmentation_models_pytorch as smp
 #from torch.utils.tensorboard import SummaryWriter
 
 # Hyperparameters etc.
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 0.001
 # Settings for the image
-BATCH_SIZE = 1
-NUM_EPOCHS = 7
-NUM_WORKERS = 8 
-IMAGE_HEIGHT = 384 # 720 originally
-IMAGE_WIDTH = 544   # 1080 originally
+BATCH_SIZE = 5
+NUM_EPOCHS = 20
+NUM_WORKERS = 8
+IMAGE_HEIGHT = 704 # 720 originally
+IMAGE_WIDTH = 704   # 1080 originally
 PIN_MEMORY = True
 # UNet Model transfer learning 
 ACTIVATION = "softmax2d"
@@ -30,10 +31,10 @@ LOAD_MODEL = False
 LOAD_CHECKPOINT = False
 SAVE_CHECKPOINT = True
 # Directories
-TRAIN_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/Prueba/Imag"
-TRAIN_MASK_DIR = r"/home/jacobo15defrutos/AVS9/Data/Prueba/Labels"
-VAL_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/Prueba/Imag"
-VAL_MASK_DIR =  r"/home/jacobo15defrutos/AVS9/Data/Prueba/Labels"
+TRAIN_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/train/images"
+TRAIN_MASK_DIR = r"/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/train/labels"
+VAL_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/val/images"
+VAL_MASK_DIR =  r"/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/val/labels"
 
 
 # define the torchvision image transforms
@@ -95,21 +96,32 @@ def main():
     scaler = torch.cuda.amp.GradScaler()
     # Loop all epochs and train
     loaded_epoch = 0
+    train_losses = []
+    val_losses = []
     for epoch in range(loaded_epoch, NUM_EPOCHS):
         print("-------------------------------------")
         print("Epoch: ", epoch)
         # Train the model for this epoch and return the loss for that epoch
         mean_loss = train_fn(train_loader, model, optimizer, loss_fn, scaler)
+        train_losses.append(mean_loss)
         #Add loss to tensorboard for visualization
         #writer.add_scalar('Loss/train', mean_loss, epoch)
         #writer.close()
         #Check accuracy of the model using the validation data
-        folder_val =r"/home/jacobo15defrutos/AVS9/Data/saved_val_images"
+        folder_val =r"/home/jacobo15defrutos/AVS9/Data/saved_val_images_unet"
         current_val_loss = utils.check_accuracy(val_loader,metrics, model, epoch, loss_fn,folder_val, device=DEVICE)
+        val_losses.append(current_val_loss)
         #Save model if validation loss is best
         best_model(current_val_loss, epoch, model, optimizer, loss_fn)
        
-
+    epochs = range(1, NUM_EPOCHS + 1)
+    plt.plot(epochs, train_losses, label='Training Loss')
+    plt.plot(epochs, val_losses, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss over Epochs')
+    plt.legend()
+    plt.show()
 
     print('End of main')
 

@@ -37,9 +37,9 @@ class IrisDataset(VisionDataset):
         mask_path = self.masks[index]
         image = np.array(Image.open(img_path).convert("RGB"))
         mask = np.array(Image.open(mask_path).convert("RGB"),dtype=np.uint8)
-        mask= mask[:,:,1]
-        img_name = str(img_path).split('\\')[-1][:-4]
-        mask_name = str(mask_path).split('\\')[-1][:-4]
+        mask= mask[:,:,0]
+        img_name = str(img_path).split('/')[-1][:-4]
+        mask_name = str(mask_path).split('/')[-1][:-4]
         sample = {"image": image, "mask": mask, "image_name":img_name,"mask_name": mask_name}
         if self.transform_imag and self.transform_mask:
             sample["image"] = self.transform_imag(sample["image"])

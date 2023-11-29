@@ -155,7 +155,7 @@ class save_best_model:
                 "loss": loss_fn,
                 "best_model_epoch": self.best_valid_loss_epoch,
                 "best_model_val": self.best_valid_loss,
-                }, r"/home/jacobo15defrutos/AVS9_1/1-Unet/Code/saved_models/best_model_unet_aug_N.pth.tar")
+                }, r"/home/jacobo15defrutos/AVS9/1-Unet/Code/best_model_unet.pth.tar")
 
 
 
