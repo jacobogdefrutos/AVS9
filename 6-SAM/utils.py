@@ -78,7 +78,7 @@ class FocalLoss(nn.Module):
 
     def forward(self, inputs, targets):
         alpha=0.5
-        gamma=2
+        gamma=1
         inputs = inputs.flatten(0,2)
         targets= targets.float()
         BCE = F.binary_cross_entropy_with_logits(inputs, targets, reduction='mean')#cambiar
@@ -233,7 +233,7 @@ def draw_translucent_seg_maps(data, output,epoch, i,folder):
     # cv2.waitKey(0)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     cv2.addWeighted(image, alpha, rgb, beta, gamma, image)
-    cv2.imwrite(f"{folder}/test_{i}_{epoch}.png", image)
+    cv2.imwrite(f"{folder}/val_{epoch}_{i}.png", image)
 
 class save_best_model:
     def __init__(self, best_valid_loss=float("inf")):
@@ -253,6 +253,6 @@ class save_best_model:
                 #"loss": loss_fn,
                 "best_model_epoch": self.best_valid_loss_epoch,
                 "best_model_val": self.best_valid_loss,
-                }, r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_newyoloSAM_20_epochs.pth.tar")
+                }, r"/home/jgonzafrutos/AVS9/6-SAM/best_model_yoloSAM_25_epochs_0001_tol09_g1.pth.tar")
         
         

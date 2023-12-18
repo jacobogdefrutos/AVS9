@@ -11,9 +11,9 @@ from resize import resize_image_with_pading
 
 
 
-BEST_M_CHECKPOINT_DIR = r"/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best_model_newyoloSAM_20_epochs.pth.tar"
-TEST_IMG_DIR = r"/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/test/Imag" 
-TEST_MASK_DIR = r"/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/test/Labels" #Dejo este path pero no vamos a necesitarlo
+BEST_M_CHECKPOINT_DIR = r"/home/jgonzafrutos/AVS9/6-SAM/best_model_newyoloSAM_20_epochs.pth.tar"
+TEST_IMG_DIR = r"/home/jgonzafrutos/AVS9/Data/Data_new_SAM/test/Imag" 
+TEST_MASK_DIR = r"/home/jgonzafrutos/AVS9/Data/Data_new_SAM/test/Labels" #Dejo este path pero no vamos a necesitarlo
 NUM_WORKERS=8
 PIN_MEMORY=True
 NEW_SIZE=(800,800)
@@ -43,11 +43,11 @@ def output(loader,model_sam,transform,boxes_dic,names,folder, device):
             #ahora pintamos de negro el background y mantenemos la segmentacion
             preds_prob = torch.sigmoid(preds.squeeze(1))# shape (1,1024,1024)
             preds_prob_numpy = preds_prob.cpu().numpy().squeeze()
-            preds_binary = (preds_prob_numpy > 0.85).astype(np.uint8)
+            preds_binary = (preds_prob_numpy > 0.7).astype(np.uint8)
             test_image= image[0].numpy()
             test_image = np.array(test_image, dtype=np.uint8)
             test_image = np.transpose(test_image, (1, 2, 0))
-            """""
+            
             fig, axes = plt.subplots(1, 3, figsize=(15, 5))
             # Plot the first image on the left
             axes[0].imshow(np.array(test_image),cmap='gray')  # Assuming the first image is grayscale
@@ -71,9 +71,9 @@ def output(loader,model_sam,transform,boxes_dic,names,folder, device):
             # Display the images side by side
             plt.show()
             plt.close('all')
-            """
-            draw_translucent_seg_maps(image, preds_binary, 1000,idx,folder)
             """""
+            draw_translucent_seg_maps(image, preds_binary, 1000,idx,folder)
+            
             if len(np.unique(preds_binary))>1:
                 ppv=precision_score(total_mask.numpy(),preds_binary,average='micro')
                 recall= recall_score(total_mask.numpy(),preds_binary,average='micro')
@@ -100,7 +100,7 @@ def output(loader,model_sam,transform,boxes_dic,names,folder, device):
     """
 def main():
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model_yolo = YOLO("/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best.pt")
+    model_yolo = YOLO("/home/jgonzafrutos/AVS9/6-SAM/best.pt")
     model_sam = ModelSimple()
     model_sam.setup()
     transform = model_sam.transform
