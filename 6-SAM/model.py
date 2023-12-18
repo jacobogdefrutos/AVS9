@@ -29,7 +29,7 @@ class ModelSimple(nn.Module):
         # we need this to make the input image size compatible with the model
         self.transform = ResizeLongestSide(1024) #This is 1024, because sam was trained on 1024x1024 images
     def setup(self):
-        self.model = sam_model_registry["vit_h"](checkpoint="/home/jacobo15defrutos/AVS9/sam_vit_h_4b8939.pth")
+        self.model = sam_model_registry["vit_h"](checkpoint="/home/jgonzafrutos/AVS9/sam_vit_h_4b8939.pth")
         # to speed up training time, we normally freeze the encoder and decoder
         if self.freeze_encoder:
             for param in self.model.image_encoder.parameters():
