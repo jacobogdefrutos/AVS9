@@ -10,20 +10,20 @@ import numpy as np
 import torch.optim as optim
 import torch
 import os
-DATA_IMG_DIR= '/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/train/images'
-DATA_MASK_DIR= '/home/jacobo15defrutos/AVS9/Data/Data_new_SAM/train/labels'
+DATA_IMG_DIR= '/home/jgonzafrutos/AVS9/Data/Data_new_SAM/train/images'
+DATA_MASK_DIR= '/home/jgonzafrutos/AVS9/Data/Data_new_SAM/train/labels'
 BATCH_SIZE=1
 NUM_WORKERS=8
 PIN_MEMORY=True
-NUM_EPOCHS=20
-LEARNING_RATE = 0.001
+NUM_EPOCHS=25
+LEARNING_RATE = 0.0001
 NEW_SIZE = (800,800)
 
 
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model_yolo = YOLO("/home/jacobo15defrutos/AVS9/6-SAM/saved_best_model/best.pt")
+    model_yolo = YOLO("/home/jgonzafrutos/AVS9/6-SAM/best.pt")
     model_sam = ModelSimple()
     model_sam.setup()
     transform = model_sam.transform
@@ -63,7 +63,7 @@ def main():
     best_model = utils.save_best_model()
     optimizer = optim.Adam(model_sam.parameters(), lr=LEARNING_RATE) #THE OPTIMIZER CAN BE CHANGED
     best_valid_loss = float('inf')
-    val_folder= '/home/jacobo15defrutos/AVS9/6-SAM/Results_val_seg'
+    val_folder= '/home/jgonzafrutos/AVS9/6-SAM/Results_val_seg'
     for epoch in range(NUM_EPOCHS):
         print(f"-----------Epoch: {epoch}------------")
         running_vloss = 0.
