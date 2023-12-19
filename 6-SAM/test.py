@@ -11,23 +11,25 @@ from resize import resize_image_with_pading
 
 
 
-BEST_M_CHECKPOINT_DIR = r"/home/jgonzafrutos/AVS9/6-SAM/best_model_newyoloSAM_20_epochs.pth.tar"
-TEST_IMG_DIR = r"/home/jgonzafrutos/AVS9/Data/Data_new_SAM/test/Imag" 
-TEST_MASK_DIR = r"/home/jgonzafrutos/AVS9/Data/Data_new_SAM/test/Labels" #Dejo este path pero no vamos a necesitarlo
+BEST_M_CHECKPOINT_DIR = r"/home/jgonzafrutos/AVS9/6-SAM/best_model_yoloSAM_40_epochs_0001.pth.tar"
+TEST_IMG_DIR = r"/home/jgonzafrutos/AVS9/Data/prueba_fran" 
+TEST_MASK_DIR = r"/home/jgonzafrutos/AVS9/Data/prueba_fran" #Dejo este path pero no vamos a necesitarlo
+TEMP_TEST_IMG_DIR=r'Data/temp_test'
+TEMP_TEST_MASK_DIR=r'Data/temp_test'
 NUM_WORKERS=8
 PIN_MEMORY=True
 NEW_SIZE=(800,800)
 def output(loader,model_sam,transform,boxes_dic,names,folder, device):
-    IoU_iris_list =[]
-    IoU_iris_list_sam=[]
-    PPV_iris_list =[]
-    Recall_iris_list =[]
-    f1_score_iris_list=[]
+    #IoU_iris_list =[]
+    #IoU_iris_list_sam=[]
+    #PPV_iris_list =[]
+    #Recall_iris_list =[]
+    #f1_score_iris_list=[]
     model_sam.eval()
     with torch.no_grad():
         for i, sample in enumerate(iter(loader)):
             image = sample['image'].squeeze(1).to(device)
-            mask= sample['mask'].squeeze(1).long().to(device)
+            #mask= sample['mask'].squeeze(1).long().to(device)
             idx= sample['idx'].item()
             og_y,og_x= sample['original_image_size']
             original_image_size=(og_y.item(),og_x.item())
@@ -35,19 +37,31 @@ def output(loader,model_sam,transform,boxes_dic,names,folder, device):
             box = transform.apply_boxes(prompt_box, original_image_size)#esto revisarlo porque no se si lo hace bien
             box_torch = torch.as_tensor(box, dtype=torch.float, device=device)
             box_torch = box_torch[None, :]
-            mask=mask[0]
-            total_mask = get_totalmask(mask)
-            total_mask = total_mask.to(device)
+            #mask=mask[0]
+            #total_mask = get_totalmask(mask)
+            #total_mask = total_mask.to(device)
             preds, iou = model_sam(image,box_torch)
             
             #ahora pintamos de negro el background y mantenemos la segmentacion
             preds_prob = torch.sigmoid(preds.squeeze(1))# shape (1,1024,1024)
             preds_prob_numpy = preds_prob.cpu().numpy().squeeze()
-            preds_binary = (preds_prob_numpy > 0.7).astype(np.uint8)
-            test_image= image[0].numpy()
-            test_image = np.array(test_image, dtype=np.uint8)
-            test_image = np.transpose(test_image, (1, 2, 0))
-            
+            preds_binary = (preds_prob_numpy > 0.8).astype(np.uint8)
+            label_color_map = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+            red_map = image[:,:,0]
+            green_map = image[:,:,1]
+            blue_map = image[:,:,2]
+            for label_num in range(0, 1):
+                index = seg_map == label_num
+                red_map[index] = np.array(label_color_map)[0]
+                green_map[index] = np.array(label_color_map)[1]
+                blue_map[index] = np.array(label_color_map)[2]
+        
+            rgb = np.stack([red_map, green_map, blue_map], axis=2)
+            rgb = np.array(rgb, dtype=np.float32)
+            #test_image= image[0].numpy()
+            #test_image = np.array(test_image, dtype=np.uint8)
+            #test_image = np.transpose(test_image, (1, 2, 0))
+            """""
             fig, axes = plt.subplots(1, 3, figsize=(15, 5))
             # Plot the first image on the left
             axes[0].imshow(np.array(test_image),cmap='gray')  # Assuming the first image is grayscale
@@ -71,9 +85,9 @@ def output(loader,model_sam,transform,boxes_dic,names,folder, device):
             # Display the images side by side
             plt.show()
             plt.close('all')
-            """""
-            draw_translucent_seg_maps(image, preds_binary, 1000,idx,folder)
-            
+           """
+            #draw_translucent_seg_maps(image, preds_binary, 1000,idx,folder)
+        """  
             if len(np.unique(preds_binary))>1:
                 ppv=precision_score(total_mask.numpy(),preds_binary,average='micro')
                 recall= recall_score(total_mask.numpy(),preds_binary,average='micro')
@@ -99,6 +113,7 @@ def output(loader,model_sam,transform,boxes_dic,names,folder, device):
     print(f"    Iris F1_score: {mean_f1_score_iris*100} %")
     """
 def main():
+    resize_image_with_pading(TEST_IMG_DIR,TEMP_TEST_IMG_DIR,NEW_SIZE)
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model_yolo = YOLO("/home/jgonzafrutos/AVS9/6-SAM/best.pt")
     model_sam = ModelSimple()
@@ -108,10 +123,8 @@ def main():
     model_sam.load_state_dict(best_checkpoint['model_state_dict'])
     model_sam.to(DEVICE)
     model_sam.eval()
-    #resize_image_with_pading(TEST_IMG_DIR,TEST_IMG_DIR,NEW_SIZE)
-    #resize_image_with_pading(TEST_MASK_DIR,TEST_MASK_DIR,NEW_SIZE)
     print("Loading model is done.")
-    preds= model_yolo.predict(TEST_IMG_DIR)
+    preds= model_yolo.predict(TEMP_TEST_IMG_DIR)
     boxes_dic= defaultdict(dict)
     for pred in preds:
         file_name = pred.path
@@ -132,8 +145,8 @@ def main():
     # Preparing the test data
    
     testloader,names =get_test(
-        TEST_IMG_DIR,
-        TEST_MASK_DIR,
+        TEMP_TEST_IMG_DIR,
+        TEMP_TEST_IMG_DIR,
         NUM_WORKERS,
         transform,
         PIN_MEMORY

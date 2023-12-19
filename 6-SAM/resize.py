@@ -1,12 +1,15 @@
 from PIL import Image
 import os
 import numpy as np
+import re
 def id_creation(filename):
     a=404
     b=404
     c=404
+    date_pattern = re.compile(r'(\d{2}_\d{2}_\d{4})')
+    matches = date_pattern.finditer(filename)
     #Left or right eye
-    if 'OI' in filename:
+    if 'OI' or 'OS'in filename:
         a=1
     elif 'OD' in filename:
         a=2
@@ -30,8 +33,21 @@ def id_creation(filename):
         c=4
     elif "POSTNER" in filename:
         c=5
-    id= str(a) + str(b)+str(c)
+    #date
+    if matches:
+        for match in matches:
+            extracted_date = match.group(1)
+            extracted_date = extracted_date.replace('_', '')
+            end_index = match.end()
+            d=filename[end_index+1]
 
+    else:
+        extracted_date = '00_00_0000'
+    #(number)
+    if d.isdigit():    
+        id= str(a) + str(b)+str(c)+extracted_date+str(d)
+    else:
+        id= str(a) + str(b)+str(c)+extracted_date
 
     return id
 def resize_image_with_pading(input_folder,output_folder,target_size):
